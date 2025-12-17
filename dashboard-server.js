@@ -194,7 +194,8 @@ async function fetchPropertyStats(key, prop, timeRanges) {
       for (const row of response.rows) {
         const country = row.dimensionValues[0].value;
         const users = parseInt(row.metricValues[0].value);
-        if (country !== "(not set)") {
+        // Skip (not set), empty strings, and blank values
+        if (country && country !== "(not set)" && country.trim() !== "") {
           result.countries.push({ name: country, users });
         }
       }
