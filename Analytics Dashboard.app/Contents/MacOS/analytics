@@ -1,0 +1,16 @@
+#!/bin/bash
+
+PORT=3847
+URL="http://localhost:$PORT"
+
+# Check if server is already running
+if ! lsof -i :$PORT > /dev/null 2>&1; then
+    # Start the server in background
+    cd /Users/MJB/GoogleAnylitcsMCP
+    /usr/local/bin/node dashboard-server.js &
+    # Wait for server to start
+    sleep 2
+fi
+
+# Open in browser
+open "$URL"

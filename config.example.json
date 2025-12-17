@@ -1,0 +1,9 @@
+{
+  "credentialsPath": "/Users/MJB/GoogleAnylitcsMCP/credentials.json",
+  "defaultProperty": "main-site",
+  "properties": {
+    "main-site": "123456789",
+    "blog": "234567890",
+    "app": "345678901"
+  }
+}

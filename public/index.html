@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics Dashboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 40px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 300;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .header .subtitle {
+      color: #8892b0;
+      font-size: 0.9rem;
+    }
+
+    .header .last-updated {
+      color: #64ffda;
+      font-size: 0.8rem;
+      margin-top: 5px;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .property-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .property-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    }
+
+    .property-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .property-name {
+      font-size: 1.4rem;
+      font-weight: 600;
+    }
+
+    .realtime {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(100, 255, 218, 0.1);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+
+    .realtime-dot {
+      width: 8px;
+      height: 8px;
+      background: #64ffda;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .sunday-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 193, 7, 0.15);
+      padding: 8px 15px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      color: #ffc107;
+    }
+
+    .header-badges {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .time-ranges {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .range {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 15px 10px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .range-label {
+      font-size: 0.7rem;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .range-users {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #64ffda;
+      margin-bottom: 5px;
+    }
+
+    .range-detail {
+      font-size: 0.7rem;
+      color: #8892b0;
+    }
+
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 15px;
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e6f1ff;
+    }
+
+    .stat-label {
+      font-size: 0.65rem;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-top: 5px;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #64ffda;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #64ffda;
+      color: #1a1a2e;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .refresh-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .section {
+      max-width: 1400px;
+      margin: 0 auto 50px auto;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #64ffda;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 25px;
+      padding-left: 5px;
+      border-left: 3px solid #64ffda;
+      padding-left: 15px;
+    }
+
+    .section-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 30px;
+    }
+
+    .traffic-sources {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .traffic-title {
+      font-size: 0.7rem;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .traffic-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .traffic-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .traffic-bar-container {
+      flex: 1;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .traffic-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #64ffda 0%, #4fd1c5 100%);
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .traffic-label {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: #1a1a2e;
+      white-space: nowrap;
+    }
+
+    .traffic-label.outside {
+      color: #e6f1ff;
+      left: auto;
+      right: -45px;
+    }
+
+    .traffic-count {
+      font-size: 0.75rem;
+      color: #8892b0;
+      min-width: 45px;
+      text-align: right;
+    }
+
+    .countries-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 15px;
+      padding-top: 15px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .top-countries {
+      display: flex;
+      gap: 15px;
+    }
+
+    .country-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 0.75rem;
+    }
+
+    .country-flag {
+      font-size: 1rem;
+    }
+
+    .country-users {
+      color: #64ffda;
+      font-weight: 600;
+    }
+
+    .view-all-link {
+      color: #64ffda;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+
+    .view-all-link:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    /* Modal styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 25px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .modal-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: #8892b0;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 5px;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: #fff;
+    }
+
+    .country-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .country-list-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 15px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+    }
+
+    .country-list-flag {
+      font-size: 1.3rem;
+    }
+
+    .country-list-name {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .country-list-users {
+      color: #64ffda;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Analytics Dashboard</h1>
+    <div class="subtitle">ChurchApps Properties</div>
+    <div class="last-updated" id="lastUpdated"></div>
+  </div>
+
+  <div id="content">
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" id="refreshBtn" onclick="loadData()">Refresh</button>
+
+  <!-- Countries Modal -->
+  <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+    <div class="modal" onclick="event.stopPropagation()">
+      <div class="modal-header">
+        <div class="modal-title" id="modalTitle">Countries</div>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="country-list" id="countryList"></div>
+    </div>
+  </div>
+
+  <script>
+    // Store all data for modal access
+    let dashboardData = null;
+
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toLocaleString();
+    }
+
+    // Country to flag emoji mapping
+    function getCountryFlag(country) {
+      const flags = {
+        'United States': '🇺🇸', 'Brazil': '🇧🇷', 'Germany': '🇩🇪', 'United Kingdom': '🇬🇧',
+        'Canada': '🇨🇦', 'Australia': '🇦🇺', 'France': '🇫🇷', 'India': '🇮🇳',
+        'Mexico': '🇲🇽', 'Spain': '🇪🇸', 'Italy': '🇮🇹', 'Netherlands': '🇳🇱',
+        'Sweden': '🇸🇪', 'Norway': '🇳🇴', 'Denmark': '🇩🇰', 'Finland': '🇫🇮',
+        'Poland': '🇵🇱', 'South Africa': '🇿🇦', 'Japan': '🇯🇵', 'South Korea': '🇰🇷',
+        'China': '🇨🇳', 'Russia': '🇷🇺', 'Argentina': '🇦🇷', 'Chile': '🇨🇱',
+        'Colombia': '🇨🇴', 'Peru': '🇵🇪', 'Philippines': '🇵🇭', 'Indonesia': '🇮🇩',
+        'Nigeria': '🇳🇬', 'Kenya': '🇰🇪', 'New Zealand': '🇳🇿', 'Ireland': '🇮🇪',
+        'Portugal': '🇵🇹', 'Belgium': '🇧🇪', 'Austria': '🇦🇹', 'Switzerland': '🇨🇭',
+        'Singapore': '🇸🇬', 'Malaysia': '🇲🇾', 'Thailand': '🇹🇭', 'Vietnam': '🇻🇳',
+        'Romania': '🇷🇴', 'Ukraine': '🇺🇦', 'Czech Republic': '🇨🇿', 'Czechia': '🇨🇿',
+        'Hungary': '🇭🇺', 'Greece': '🇬🇷', 'Turkey': '🇹🇷', 'Israel': '🇮🇱',
+        'Egypt': '🇪🇬', 'Pakistan': '🇵🇰', 'Bangladesh': '🇧🇩', 'Taiwan': '🇹🇼',
+        'Hong Kong': '🇭🇰', 'United Arab Emirates': '🇦🇪', 'Saudi Arabia': '🇸🇦',
+      };
+      return flags[country] || '🌍';
+    }
+
+    function showCountriesModal(propertyKey, propertyName) {
+      const modal = document.getElementById('modalOverlay');
+      const title = document.getElementById('modalTitle');
+      const list = document.getElementById('countryList');
+
+      // Find the property data
+      let countries = [];
+      if (dashboardData.apps.items[propertyKey]) {
+        countries = dashboardData.apps.items[propertyKey].countries || [];
+      } else if (dashboardData.websites.items[propertyKey]) {
+        countries = dashboardData.websites.items[propertyKey].countries || [];
+      }
+
+      title.textContent = `${propertyName} - Countries (7d)`;
+
+      if (countries.length === 0) {
+        list.innerHTML = '<div style="color: #8892b0; text-align: center; padding: 20px;">No country data available</div>';
+      } else {
+        list.innerHTML = countries.map(c => `
+          <div class="country-list-item">
+            <span class="country-list-flag">${getCountryFlag(c.name)}</span>
+            <span class="country-list-name">${c.name}</span>
+            <span class="country-list-users">${formatNumber(c.users)} users</span>
+          </div>
+        `).join('');
+      }
+
+      modal.classList.add('active');
+    }
+
+    function closeModal(event) {
+      if (!event || event.target.id === 'modalOverlay') {
+        document.getElementById('modalOverlay').classList.remove('active');
+      }
+    }
+
+    // Close modal on Escape key
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+
+    function renderTrafficSources(sources) {
+      if (!sources || sources.length === 0) {
+        return '';
+      }
+
+      const maxSessions = sources[0]?.sessions || 1;
+
+      const items = sources.map(source => {
+        const percentage = (source.sessions / maxSessions) * 100;
+        const isSmall = percentage < 30;
+        return `
+          <div class="traffic-item">
+            <div class="traffic-bar-container">
+              <div class="traffic-bar" style="width: ${percentage}%"></div>
+              <span class="traffic-label ${isSmall ? 'outside' : ''}" style="${isSmall ? 'left: ' + (percentage + 2) + '%; right: auto; color: #e6f1ff;' : ''}">${source.name}</span>
+            </div>
+            <div class="traffic-count">${formatNumber(source.sessions)}</div>
+          </div>
+        `;
+      }).join('');
+
+      return `
+        <div class="traffic-sources">
+          <div class="traffic-title">Traffic Sources (7d)</div>
+          <div class="traffic-list">
+            ${items}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCountries(countries, propertyKey, propertyName) {
+      if (!countries || countries.length === 0) {
+        return '';
+      }
+
+      const top2 = countries.slice(0, 2);
+      const chips = top2.map(c => `
+        <div class="country-chip">
+          <span class="country-flag">${getCountryFlag(c.name)}</span>
+          <span>${c.name}</span>
+          <span class="country-users">${formatNumber(c.users)}</span>
+        </div>
+      `).join('');
+
+      return `
+        <div class="countries-row">
+          <div class="top-countries">${chips}</div>
+          <a class="view-all-link" onclick="showCountriesModal('${propertyKey}', '${propertyName}')">View all →</a>
+        </div>
+      `;
+    }
+
+    async function loadData() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
+
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+        dashboardData = data;  // Store for modal access
+        renderDashboard(data);
+        document.getElementById('lastUpdated').textContent =
+          'Last updated: ' + new Date().toLocaleTimeString();
+      } catch (error) {
+        console.error('Error loading data:', error);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Refresh';
+      }
+    }
+
+    function renderPropertyCard(property) {
+      const ranges = property.ranges;
+      const weekData = ranges['7 Days'] || {};
+
+      return `
+        <div class="property-card">
+          <div class="property-header">
+            <div class="property-name">${property.name}</div>
+            <div class="header-badges">
+              ${(property.propertyKey === 'freeshow-app' || property.propertyKey === 'b1-checkin') && property.sundayUsers ? `
+                <div class="sunday-badge">
+                  ⛪ ${formatNumber(property.sundayUsers)} Sunday
+                </div>
+              ` : ''}
+              <div class="realtime">
+                <div class="realtime-dot"></div>
+                ${property.realtime || 0} online
+              </div>
+            </div>
+          </div>
+
+          <div class="time-ranges">
+            <div class="range">
+              <div class="range-label">Today</div>
+              <div class="range-users">${formatNumber(ranges['Today']?.users || 0)}</div>
+              <div class="range-detail">${formatNumber(ranges['Today']?.sessions || 0)} sessions</div>
+            </div>
+            <div class="range">
+              <div class="range-label">7 Days</div>
+              <div class="range-users">${formatNumber(ranges['7 Days']?.users || 0)}</div>
+              <div class="range-detail">${formatNumber(ranges['7 Days']?.sessions || 0)} sessions</div>
+            </div>
+            <div class="range">
+              <div class="range-label">14 Days</div>
+              <div class="range-users">${formatNumber(ranges['14 Days']?.users || 0)}</div>
+              <div class="range-detail">${formatNumber(ranges['14 Days']?.sessions || 0)} sessions</div>
+            </div>
+            <div class="range">
+              <div class="range-label">28 Days</div>
+              <div class="range-users">${formatNumber(ranges['28 Days']?.users || 0)}</div>
+              <div class="range-detail">${formatNumber(ranges['28 Days']?.sessions || 0)} sessions</div>
+            </div>
+          </div>
+
+          <div class="stats-row">
+            <div class="stat">
+              <div class="stat-value">${formatNumber(weekData.newUsers || 0)}</div>
+              <div class="stat-label">New Users (7d)</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${formatNumber(weekData.sessions || 0)}</div>
+              <div class="stat-label">Sessions (7d)</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value">${formatNumber(weekData.pageViews || 0)}</div>
+              <div class="stat-label">Page Views (7d)</div>
+            </div>
+          </div>
+
+          ${renderTrafficSources(property.trafficSources)}
+          ${renderCountries(property.countries, property.propertyKey, property.name)}
+        </div>
+      `;
+    }
+
+    function renderDashboard(data) {
+      const content = document.getElementById('content');
+      content.innerHTML = '';
+
+      // Render Apps section
+      const appsSection = document.createElement('div');
+      appsSection.className = 'section';
+      appsSection.innerHTML = `
+        <div class="section-title">${data.apps.label}</div>
+        <div class="section-grid">
+          ${Object.values(data.apps.items).map(prop => renderPropertyCard(prop)).join('')}
+        </div>
+      `;
+      content.appendChild(appsSection);
+
+      // Render Websites section
+      const websitesSection = document.createElement('div');
+      websitesSection.className = 'section';
+      websitesSection.innerHTML = `
+        <div class="section-title">${data.websites.label}</div>
+        <div class="section-grid">
+          ${Object.values(data.websites.items).map(prop => renderPropertyCard(prop)).join('')}
+        </div>
+      `;
+      content.appendChild(websitesSection);
+    }
+
+    // Load data on page load
+    loadData();
+
+    // Auto-refresh every 5 minutes
+    setInterval(loadData, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
