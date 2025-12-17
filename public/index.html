@@ -16,7 +16,8 @@
       background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
       min-height: 100vh;
       color: #fff;
-      padding: 40px;
+      padding: 30px 20px;
+      overflow-x: hidden;
     }
 
     .header {
@@ -53,10 +54,11 @@
     .property-card {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 20px;
-      padding: 30px;
+      padding: 20px;
       backdrop-filter: blur(10px);
       border: 1px solid rgba(255, 255, 255, 0.1);
       transition: transform 0.3s ease, box-shadow 0.3s ease;
+      overflow: hidden;
     }
 
     .property-card:hover {
@@ -243,8 +245,8 @@
 
     .section-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 30px;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 20px;
     }
 
     .traffic-sources {
@@ -446,6 +448,30 @@
       color: #64ffda;
       font-weight: 600;
       font-size: 0.9rem;
+    }
+
+    /* Tablet/Narrow Container Styles */
+    @media (max-width: 1000px) {
+      .section-grid {
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 15px;
+      }
+
+      .property-card {
+        padding: 18px;
+      }
+
+      .time-ranges {
+        gap: 8px;
+      }
+
+      .range {
+        padding: 12px 8px;
+      }
+
+      .range-users {
+        font-size: 1.3rem;
+      }
     }
 
     /* Mobile Responsive Styles */
