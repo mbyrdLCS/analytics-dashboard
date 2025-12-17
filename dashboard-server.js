@@ -227,6 +227,47 @@ async function fetchPropertyStats(key, prop, timeRanges) {
     result.sundayUsers = 0;
   }
 
+  // Get new users via dimension (fallback for apps where newUsers metric returns 0)
+  if (result.ranges['7 Days']?.newUsers === 0) {
+    try {
+      const [response] = await analyticsDataClient.runReport({
+        property: `properties/${prop.id}`,
+        dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+        metrics: [{ name: "totalUsers" }],
+        dimensions: [{ name: "newVsReturning" }],
+        dimensionFilter: {
+          filter: {
+            fieldName: "newVsReturning",
+            stringFilter: { value: "new" }
+          }
+        }
+      });
+
+      if (response.rows && response.rows.length > 0) {
+        const newUsersFromDimension = parseInt(response.rows[0].metricValues[0].value);
+        // Update all ranges with this new user count (proportionally estimated)
+        const ratio7d = newUsersFromDimension / (result.ranges['7 Days']?.users || 1);
+        for (const rangeLabel of Object.keys(result.ranges)) {
+          if (result.ranges[rangeLabel].newUsers === 0) {
+            result.ranges[rangeLabel].newUsers = Math.round(result.ranges[rangeLabel].users * ratio7d);
+          }
+        }
+      }
+    } catch (err) {
+      // Keep existing values
+    }
+  }
+
+  // Get sessions via activeUsers if sessions is 0 (for apps)
+  if (result.ranges['7 Days']?.sessions === 0 && result.ranges['7 Days']?.users > 0) {
+    // Use pageViews as a proxy for engagement since sessions aren't tracked
+    for (const rangeLabel of Object.keys(result.ranges)) {
+      if (result.ranges[rangeLabel].sessions === 0) {
+        result.ranges[rangeLabel].sessions = result.ranges[rangeLabel].pageViews;
+      }
+    }
+  }
+
   result.propertyKey = key;
   return result;
 }
