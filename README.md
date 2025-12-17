@@ -75,53 +75,95 @@ MCP server for querying Google Analytics Data API from Claude Code.
 
 ---
 
-## Analytics Dashboard App
+## Analytics Dashboard
 
-A standalone macOS app that displays analytics for key properties in your browser.
+A web dashboard displaying real-time Google Analytics for ChurchApps properties.
+
+**Live URL:** https://analytics-dashboard-seven-ebon.vercel.app/
+
+**Embedded at:** https://churchapps.org/analytics
 
 ### Properties Tracked
 
-**Websites**
-- FreeShow.app
-- B1.church
-
 **Apps**
-- FreeShow App
-- B1 Mobile
-- Lessons.church
-- B1 Admin
+| Property | ID | Notes |
+|----------|-----|-------|
+| B1 Admin | 516573834 | |
+| FreeShow App | 416366588 | Shows Sunday usage |
+| B1 Mobile | 347220825 | |
+| B1 Checkin | 508251303 | Shows Sunday usage |
+
+**Websites**
+| Property | ID | Notes |
+|----------|-----|-------|
+| FreeShow.app | 408962359 | |
+| B1.church | 363397146 | |
+| Lessons.church | 363411724 | |
+| ChurchApps.org | 363427908 | Needs tracking code fix |
 
 ### Features
 
 - Real-time user count (with live indicator)
 - Multiple time ranges: Today, 7 Days, 14 Days, 28 Days
-- Users, sessions, new users, and page views
+- Traffic sources visualization with bar charts
+- Top countries with flag emojis (click "View all" for full list)
+- Sunday usage metric for church apps (FreeShow App, B1 Checkin)
 - Auto-refreshes every 5 minutes
+- Mobile responsive design
 - Dark themed UI
 
-### Usage
-
-1. **Add to Dock**: Drag `Analytics Dashboard.app` from this folder to your Dock
-2. **Click to launch**: Opens a browser dashboard at `http://localhost:3847`
-3. The server starts automatically and stays running in the background
-
-### Files
-
-| File | Description |
-|------|-------------|
-| `Analytics Dashboard.app` | macOS app (double-click or add to Dock) |
-| `dashboard-server.js` | Express server that serves the dashboard |
-| `public/index.html` | Dashboard HTML/CSS/JS |
-
-### Manual Start
-
-To run the dashboard server manually:
+### Running Locally
 
 ```bash
 cd /Users/MJB/GoogleAnylitcsMCP
 node dashboard-server.js
 # Opens at http://localhost:3847
 ```
+
+### Deploying to Vercel
+
+1. Push code to GitHub: https://github.com/mbyrdLCS/analytics-dashboard
+
+2. In Vercel, add environment variable:
+   - **Name:** `GOOGLE_CREDENTIALS`
+   - **Value:** Contents of `credentials.json` as a single line
+
+   To convert credentials to single line:
+   ```bash
+   cat credentials.json | jq -c .
+   ```
+   (Output saved in `credentials-oneline.txt` for convenience)
+
+3. Vercel auto-deploys on each push to main
+
+### Embedding in an iframe
+
+```html
+<iframe
+  src="https://analytics-dashboard-seven-ebon.vercel.app/"
+  style="width: 100%; height: 100vh; border: none; min-height: 800px;"
+  frameborder="0">
+</iframe>
+```
+
+### Optional Password Protection
+
+Set `DASHBOARD_PASSWORD` environment variable in Vercel to require a password.
+
+### Files
+
+| File | Description |
+|------|-------------|
+| `dashboard-server.js` | Express server and API endpoints |
+| `public/index.html` | Dashboard UI |
+| `public/login.html` | Login page (if password enabled) |
+| `vercel.json` | Vercel deployment config |
+| `credentials.json` | Google credentials (not in git) |
+| `credentials-oneline.txt` | Single-line credentials for Vercel (not in git) |
+
+### macOS Dock App
+
+Drag `Analytics Dashboard.app` to your Dock for quick local access.
 
 ### Customization
 
@@ -134,16 +176,22 @@ const properties = {
     items: {
       "freeshow": { name: "FreeShow.app", id: "408962359" },
       "b1-web": { name: "B1.church", id: "363397146" },
+      "lessons-church": { name: "Lessons.church", id: "363411724" },
+      "churchapps": { name: "ChurchApps.org", id: "363427908" },
     }
   },
   apps: {
     label: "Apps",
     items: {
+      "b1-admin": { name: "B1 Admin", id: "516573834" },
       "freeshow-app": { name: "FreeShow App", id: "416366588" },
       "b1-mobile": { name: "B1 Mobile", id: "347220825" },
-      "lessons-church": { name: "Lessons.church", id: "363411724" },
-      "b1-admin": { name: "B1 Admin", id: "516573834" },
+      "b1-checkin": { name: "B1 Checkin", id: "508251303" },
     }
   }
 };
 ```
+
+### Known Issues
+
+- **ChurchApps.org shows no data:** The website has the wrong tracking ID installed. It currently has `G-XYCPBKWXB5` but needs `G-KQ02ER7SZ9`.
