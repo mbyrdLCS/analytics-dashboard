@@ -242,6 +242,12 @@ app.get("/api/stats", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => {
-  console.log(`Dashboard running at http://localhost:${PORT}`);
-});
+// Only listen when running locally (not on Vercel)
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`Dashboard running at http://localhost:${PORT}`);
+  });
+}
+
+// Export for Vercel serverless
+export default app;
