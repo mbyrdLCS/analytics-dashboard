@@ -16,10 +16,16 @@ const DASHBOARD_PASSWORD = process.env.DASHBOARD_PASSWORD || null;
 
 // Configuration - use env var or local file
 let credentials;
-if (process.env.GOOGLE_CREDENTIALS) {
-  credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
-} else {
-  credentials = JSON.parse(readFileSync(join(__dirname, "credentials.json"), "utf-8"));
+let credentialsError = null;
+try {
+  if (process.env.GOOGLE_CREDENTIALS) {
+    credentials = JSON.parse(process.env.GOOGLE_CREDENTIALS);
+  } else {
+    credentials = JSON.parse(readFileSync(join(__dirname, "credentials.json"), "utf-8"));
+  }
+} catch (err) {
+  credentialsError = err.message;
+  credentials = null;
 }
 const properties = {
   websites: {
@@ -43,8 +49,22 @@ const properties = {
 };
 
 // Initialize the Analytics Data client
-const analyticsDataClient = new BetaAnalyticsDataClient({
-  credentials: credentials,
+let analyticsDataClient = null;
+if (credentials) {
+  analyticsDataClient = new BetaAnalyticsDataClient({
+    credentials: credentials,
+  });
+}
+
+// Health check endpoint
+app.get("/api/health", (req, res) => {
+  res.json({
+    status: "ok",
+    hasCredentials: !!credentials,
+    credentialsError: credentialsError,
+    nodeVersion: process.version,
+    vercel: process.env.VERCEL === '1'
+  });
 });
 
 // Password protection middleware
@@ -213,6 +233,12 @@ async function fetchPropertyStats(key, prop, timeRanges) {
 
 // API endpoint to get stats
 app.get("/api/stats", async (req, res) => {
+  if (!analyticsDataClient) {
+    return res.status(500).json({
+      error: "Analytics client not initialized",
+      credentialsError: credentialsError
+    });
+  }
   try {
     const timeRanges = [
       { label: "Today", start: "today", end: "today" },
