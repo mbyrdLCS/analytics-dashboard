@@ -1,6 +1,7 @@
 node_modules/
 config.json
 credentials.json
+credentials-oneline.txt
 mcpserver-*.json
 *.json.bak
 .env
