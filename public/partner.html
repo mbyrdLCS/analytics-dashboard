@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Partner Traffic - SV Solutions USA</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 30px 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    .header h1 {
+      font-size: 2.5rem;
+      font-weight: 300;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+
+    .header .subtitle {
+      color: #8892b0;
+      font-size: 1.1rem;
+      margin-bottom: 5px;
+    }
+
+    .header .destination {
+      color: #64ffda;
+      font-size: 0.9rem;
+      margin-top: 5px;
+    }
+
+    .header .last-updated {
+      color: #64ffda;
+      font-size: 0.8rem;
+      margin-top: 10px;
+    }
+
+    .utm-link-box {
+      max-width: 900px;
+      margin: 0 auto 40px;
+      background: rgba(100, 255, 218, 0.1);
+      border: 2px solid #64ffda;
+      border-radius: 15px;
+      padding: 25px;
+      text-align: center;
+    }
+
+    .utm-link-box h3 {
+      color: #64ffda;
+      font-size: 1rem;
+      margin-bottom: 15px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .utm-link {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #e6f1ff;
+      word-break: break-all;
+      margin-bottom: 15px;
+    }
+
+    .copy-btn {
+      background: #64ffda;
+      color: #1a1a2e;
+      border: none;
+      padding: 10px 25px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .copy-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 5px 15px rgba(100, 255, 218, 0.3);
+    }
+
+    .copy-btn.copied {
+      background: #4fd1c5;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 40px;
+    }
+
+    .stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 15px;
+      padding: 25px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      text-align: center;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .stat-label {
+      font-size: 0.7rem;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 10px;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #64ffda;
+      margin-bottom: 5px;
+    }
+
+    .stat-detail {
+      font-size: 0.75rem;
+      color: #8892b0;
+    }
+
+    .section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 20px;
+      padding: 30px;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .section-title {
+      font-size: 1.2rem;
+      font-weight: 500;
+      color: #64ffda;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      margin-bottom: 25px;
+      padding-left: 15px;
+      border-left: 3px solid #64ffda;
+    }
+
+    .time-ranges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+
+    .range {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .range-label {
+      font-size: 0.7rem;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .range-users {
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: #64ffda;
+      margin-bottom: 8px;
+    }
+
+    .range-detail {
+      font-size: 0.7rem;
+      color: #8892b0;
+      line-height: 1.5;
+    }
+
+    .pages-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .pages-table th {
+      text-align: left;
+      padding: 12px;
+      font-size: 0.75rem;
+      color: #8892b0;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .pages-table td {
+      padding: 15px 12px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.85rem;
+    }
+
+    .pages-table tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    .page-path {
+      color: #e6f1ff;
+      font-family: 'Courier New', monospace;
+    }
+
+    .page-views {
+      color: #64ffda;
+      font-weight: 600;
+    }
+
+    .chart-container {
+      height: 300px;
+      margin-top: 20px;
+      position: relative;
+    }
+
+    .loading {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 200px;
+    }
+
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.1);
+      border-top-color: #64ffda;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .refresh-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      background: #64ffda;
+      color: #1a1a2e;
+      border: none;
+      padding: 15px 25px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 100;
+    }
+
+    .refresh-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 10px 30px rgba(100, 255, 218, 0.3);
+    }
+
+    .refresh-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .no-data {
+      text-align: center;
+      padding: 40px;
+      color: #8892b0;
+      font-size: 1.1rem;
+    }
+
+    .no-data-icon {
+      font-size: 3rem;
+      margin-bottom: 15px;
+      opacity: 0.5;
+    }
+
+    .chart {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      height: 250px;
+      padding: 20px 10px;
+      gap: 3px;
+    }
+
+    .chart-bar {
+      flex: 1;
+      background: linear-gradient(180deg, #64ffda 0%, #4fd1c5 100%);
+      border-radius: 4px 4px 0 0;
+      position: relative;
+      transition: opacity 0.2s;
+      min-height: 2px;
+    }
+
+    .chart-bar:hover {
+      opacity: 0.8;
+    }
+
+    .chart-bar-tooltip {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0, 0, 0, 0.9);
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 0.7rem;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s;
+      margin-bottom: 5px;
+    }
+
+    .chart-bar:hover .chart-bar-tooltip {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      body {
+        padding: 20px 15px;
+      }
+
+      .header h1 {
+        font-size: 1.8rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .stat-value {
+        font-size: 2rem;
+      }
+
+      .time-ranges {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .pages-table {
+        font-size: 0.75rem;
+      }
+
+      .chart {
+        height: 200px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Partner Traffic Dashboard</h1>
+    <div class="subtitle">SV Solutions USA</div>
+    <div class="destination">Tracking traffic to → freeshow.com</div>
+    <div class="last-updated" id="lastUpdated"></div>
+  </div>
+
+  <div class="utm-link-box">
+    <h3>📎 Your Tracking Link</h3>
+    <div class="utm-link" id="utmLink">https://freeshow.com?utm_source=svsolutionsusa&utm_medium=referral&utm_campaign=partner</div>
+    <button class="copy-btn" onclick="copyLink()">Copy Link</button>
+    <div style="margin-top: 15px; font-size: 0.8rem; color: #8892b0;">
+      Use this link on your website to automatically track all visitors sent to FreeShow
+    </div>
+  </div>
+
+  <div class="container">
+    <div id="content">
+      <div class="loading" id="loading">
+        <div class="spinner"></div>
+      </div>
+    </div>
+  </div>
+
+  <button class="refresh-btn" id="refreshBtn" onclick="loadData()">Refresh</button>
+
+  <script>
+    function formatNumber(num) {
+      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
+      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
+      return num.toLocaleString();
+    }
+
+    function formatDuration(seconds) {
+      const minutes = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${minutes}m ${secs}s`;
+    }
+
+    function formatDate(dateStr) {
+      // dateStr is in format YYYYMMDD
+      const year = dateStr.substring(0, 4);
+      const month = dateStr.substring(4, 6);
+      const day = dateStr.substring(6, 8);
+      const date = new Date(year, month - 1, day);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function copyLink() {
+      const link = document.getElementById('utmLink').textContent;
+      navigator.clipboard.writeText(link).then(() => {
+        const btn = event.target;
+        btn.textContent = 'Copied!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = 'Copy Link';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    async function loadData() {
+      const btn = document.getElementById('refreshBtn');
+      btn.disabled = true;
+      btn.textContent = 'Loading...';
+
+      try {
+        const response = await fetch('/api/partner/svsolutionsusa');
+        const data = await response.json();
+        renderDashboard(data);
+        document.getElementById('lastUpdated').textContent =
+          'Last updated: ' + new Date().toLocaleTimeString();
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('content').innerHTML =
+          '<div class="no-data"><div class="no-data-icon">⚠️</div>Error loading data. Please try again.</div>';
+      } finally {
+        btn.disabled = false;
+        btn.textContent = 'Refresh';
+      }
+    }
+
+    function renderDashboard(data) {
+      const content = document.getElementById('content');
+
+      const weekData = data.ranges['7 Days'] || {};
+      const allTimeData = data.ranges['All Time'] || {};
+
+      // Check if there's any data
+      if (allTimeData.users === 0) {
+        content.innerHTML = `
+          <div class="no-data">
+            <div class="no-data-icon">📊</div>
+            <div>No traffic data yet</div>
+            <div style="margin-top: 10px; font-size: 0.9rem;">
+              Start using your tracking link to see visitors here!
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      content.innerHTML = `
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-label">Total Users</div>
+            <div class="stat-value">${formatNumber(allTimeData.users)}</div>
+            <div class="stat-detail">All Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Total Sessions</div>
+            <div class="stat-value">${formatNumber(allTimeData.sessions)}</div>
+            <div class="stat-detail">All Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Page Views</div>
+            <div class="stat-value">${formatNumber(allTimeData.pageViews)}</div>
+            <div class="stat-detail">All Time</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-label">Avg Session</div>
+            <div class="stat-value" style="font-size: 1.8rem;">${formatDuration(allTimeData.avgSessionDuration)}</div>
+            <div class="stat-detail">Duration</div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Time Ranges</div>
+          <div class="time-ranges">
+            ${renderTimeRange('Today', data.ranges['Today'])}
+            ${renderTimeRange('7 Days', data.ranges['7 Days'])}
+            ${renderTimeRange('14 Days', data.ranges['14 Days'])}
+            ${renderTimeRange('28 Days', data.ranges['28 Days'])}
+          </div>
+        </div>
+
+        ${data.dailyTraffic && data.dailyTraffic.length > 0 ? `
+          <div class="section">
+            <div class="section-title">30 Day Traffic Trend</div>
+            ${renderChart(data.dailyTraffic)}
+          </div>
+        ` : ''}
+
+        ${data.topPages && data.topPages.length > 0 ? `
+          <div class="section">
+            <div class="section-title">Top Pages (Last 7 Days)</div>
+            <table class="pages-table">
+              <thead>
+                <tr>
+                  <th>Page Path</th>
+                  <th style="text-align: right;">Page Views</th>
+                  <th style="text-align: right;">Users</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.topPages.map(page => `
+                  <tr>
+                    <td class="page-path">${page.path}</td>
+                    <td class="page-views" style="text-align: right;">${formatNumber(page.views)}</td>
+                    <td style="text-align: right; color: #e6f1ff;">${formatNumber(page.users)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+        ` : ''}
+      `;
+    }
+
+    function renderTimeRange(label, data) {
+      if (!data) data = { users: 0, newUsers: 0, sessions: 0, pageViews: 0, avgSessionDuration: 0 };
+
+      return `
+        <div class="range">
+          <div class="range-label">${label}</div>
+          <div class="range-users">${formatNumber(data.users)}</div>
+          <div class="range-detail">
+            ${formatNumber(data.sessions)} sessions<br>
+            ${formatNumber(data.newUsers)} new users
+          </div>
+        </div>
+      `;
+    }
+
+    function renderChart(dailyData) {
+      if (!dailyData || dailyData.length === 0) return '';
+
+      const maxUsers = Math.max(...dailyData.map(d => d.users), 1);
+
+      const bars = dailyData.map(day => {
+        const height = (day.users / maxUsers) * 100;
+        return `
+          <div class="chart-bar" style="height: ${height}%">
+            <div class="chart-bar-tooltip">
+              ${formatDate(day.date)}<br>
+              ${day.users} users<br>
+              ${day.sessions} sessions
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      return `<div class="chart">${bars}</div>`;
+    }
+
+    // Load data on page load
+    loadData();
+
+    // Auto-refresh every 5 minutes
+    setInterval(loadData, 5 * 60 * 1000);
+  </script>
+</body>
+</html>

@@ -206,17 +206,17 @@ async function fetchPropertyStats(key, prop, timeRanges) {
 
   // Get Sunday users (for apps like FreeShow)
   try {
+    // Calculate the most recent Sunday date
+    const today = new Date();
+    const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const lastSunday = new Date(today);
+    lastSunday.setDate(today.getDate() - dayOfWeek);
+    const sundayDate = lastSunday.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+
     const [response] = await analyticsDataClient.runReport({
       property: `properties/${prop.id}`,
-      dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+      dateRanges: [{ startDate: sundayDate, endDate: sundayDate }],
       metrics: [{ name: "totalUsers" }],
-      dimensions: [{ name: "dayOfWeekName" }],
-      dimensionFilter: {
-        filter: {
-          fieldName: "dayOfWeekName",
-          stringFilter: { value: "Sunday" }
-        }
-      }
     });
 
     if (response.rows && response.rows.length > 0) {
@@ -272,6 +272,133 @@ async function fetchPropertyStats(key, prop, timeRanges) {
   result.propertyKey = key;
   return result;
 }
+
+// API endpoint for partner traffic tracking (svsolutionsusa.com)
+app.get("/api/partner/svsolutionsusa", async (req, res) => {
+  if (!analyticsDataClient) {
+    return res.status(500).json({
+      error: "Analytics client not initialized",
+      credentialsError: credentialsError
+    });
+  }
+  try {
+    const propertyId = properties.websites.items.freeshow.id;
+    const timeRanges = [
+      { label: "Today", start: "today", end: "today" },
+      { label: "7 Days", start: "7daysAgo", end: "today" },
+      { label: "14 Days", start: "14daysAgo", end: "today" },
+      { label: "28 Days", start: "28daysAgo", end: "today" },
+      { label: "All Time", start: "2020-01-01", end: "today" },
+    ];
+
+    const result = {
+      partner: "SV Solutions USA",
+      website: "freeshow.com",
+      ranges: {},
+    };
+
+    // Get time range stats filtered by UTM source
+    for (const range of timeRanges) {
+      try {
+        const [response] = await analyticsDataClient.runReport({
+          property: `properties/${propertyId}`,
+          dateRanges: [{ startDate: range.start, endDate: range.end }],
+          metrics: [
+            { name: "totalUsers" },
+            { name: "newUsers" },
+            { name: "sessions" },
+            { name: "screenPageViews" },
+            { name: "averageSessionDuration" },
+          ],
+          dimensionFilter: {
+            filter: {
+              fieldName: "sessionSource",
+              stringFilter: { value: "svsolutionsusa" }
+            }
+          }
+        });
+
+        if (response.rows && response.rows.length > 0) {
+          const row = response.rows[0];
+          result.ranges[range.label] = {
+            users: parseInt(row.metricValues[0].value),
+            newUsers: parseInt(row.metricValues[1].value),
+            sessions: parseInt(row.metricValues[2].value),
+            pageViews: parseInt(row.metricValues[3].value),
+            avgSessionDuration: parseFloat(row.metricValues[4].value),
+          };
+        } else {
+          result.ranges[range.label] = { users: 0, newUsers: 0, sessions: 0, pageViews: 0, avgSessionDuration: 0 };
+        }
+      } catch (err) {
+        result.ranges[range.label] = { users: 0, newUsers: 0, sessions: 0, pageViews: 0, avgSessionDuration: 0 };
+      }
+    }
+
+    // Get top pages visited from this source (7 days)
+    try {
+      const [response] = await analyticsDataClient.runReport({
+        property: `properties/${propertyId}`,
+        dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+        metrics: [{ name: "screenPageViews" }, { name: "totalUsers" }],
+        dimensions: [{ name: "pagePath" }],
+        dimensionFilter: {
+          filter: {
+            fieldName: "sessionSource",
+            stringFilter: { value: "svsolutionsusa" }
+          }
+        },
+        orderBys: [{ metric: { metricName: "screenPageViews" }, desc: true }],
+        limit: 10,
+      });
+
+      result.topPages = [];
+      if (response.rows) {
+        for (const row of response.rows) {
+          const path = row.dimensionValues[0].value;
+          const views = parseInt(row.metricValues[0].value);
+          const users = parseInt(row.metricValues[1].value);
+          result.topPages.push({ path, views, users });
+        }
+      }
+    } catch (err) {
+      result.topPages = [];
+    }
+
+    // Get daily traffic for last 30 days
+    try {
+      const [response] = await analyticsDataClient.runReport({
+        property: `properties/${propertyId}`,
+        dateRanges: [{ startDate: "30daysAgo", endDate: "today" }],
+        metrics: [{ name: "totalUsers" }, { name: "sessions" }],
+        dimensions: [{ name: "date" }],
+        dimensionFilter: {
+          filter: {
+            fieldName: "sessionSource",
+            stringFilter: { value: "svsolutionsusa" }
+          }
+        },
+        orderBys: [{ dimension: { dimensionName: "date" } }],
+      });
+
+      result.dailyTraffic = [];
+      if (response.rows) {
+        for (const row of response.rows) {
+          const date = row.dimensionValues[0].value;
+          const users = parseInt(row.metricValues[0].value);
+          const sessions = parseInt(row.metricValues[1].value);
+          result.dailyTraffic.push({ date, users, sessions });
+        }
+      }
+    } catch (err) {
+      result.dailyTraffic = [];
+    }
+
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 // API endpoint to get stats
 app.get("/api/stats", async (req, res) => {
