@@ -293,7 +293,7 @@ app.get("/api/partner/svsolutionsusa", async (req, res) => {
 
     const result = {
       partner: "SV Solutions USA",
-      website: "freeshow.app/downloading",
+      website: "freeshow.app/downloads",
       ranges: {},
     };
 
