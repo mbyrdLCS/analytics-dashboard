@@ -931,8 +931,8 @@
     // Load data on page load
     loadData();
 
-    // Auto-refresh every 5 minutes
-    setInterval(loadData, 5 * 60 * 1000);
+    // Auto-refresh every 6 hours (matches server cache duration)
+    setInterval(loadData, 6 * 60 * 60 * 1000);
   </script>
 </body>
 </html>

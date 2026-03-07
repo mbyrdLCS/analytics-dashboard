@@ -431,6 +431,7 @@ app.get("/api/stats", async (req, res) => {
       results.apps.items[key] = await fetchPropertyStats(key, prop, timeRanges);
     }
 
+    res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=3600');
     res.json(results);
   } catch (error) {
     res.status(500).json({ error: error.message });
