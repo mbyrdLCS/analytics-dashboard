@@ -950,14 +950,6 @@
       const content = document.getElementById('content');
       content.innerHTML = '';
 
-      // Render Podcast section
-      const podcastEpisodes = podcastData?.episodes || podcastData;
-      if (podcastEpisodes && podcastEpisodes.length > 0) {
-        const podcastSection = document.createElement('div');
-        podcastSection.innerHTML = renderPodcastSection(podcastData);
-        content.appendChild(podcastSection.firstElementChild);
-      }
-
       // Render Apps section
       const appsSection = document.createElement('div');
       appsSection.className = 'section';
@@ -979,6 +971,14 @@
         </div>
       `;
       content.appendChild(websitesSection);
+
+      // Render Podcast section at the bottom
+      const podcastEpisodes = podcastData?.episodes || podcastData;
+      if (podcastEpisodes && podcastEpisodes.length > 0) {
+        const podcastSection = document.createElement('div');
+        podcastSection.innerHTML = renderPodcastSection(podcastData);
+        content.appendChild(podcastSection.firstElementChild);
+      }
     }
 
     // Load data on page load
