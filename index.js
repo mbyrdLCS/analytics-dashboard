@@ -5,6 +5,7 @@ import {
   ListToolsRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { BetaAnalyticsDataClient } from "@google-analytics/data";
+import { AnalyticsAdminServiceClient } from "@google-analytics/admin";
 import { readFileSync } from "fs";
 import { fileURLToPath } from "url";
 import { dirname, join } from "path";
@@ -25,6 +26,11 @@ const { credentialsPath, defaultProperty, properties } = config;
 
 // Initialize the Analytics Data client
 const analyticsDataClient = new BetaAnalyticsDataClient({
+  keyFilename: credentialsPath,
+});
+
+// Initialize the Analytics Admin client
+const analyticsAdminClient = new AnalyticsAdminServiceClient({
   keyFilename: credentialsPath,
 });
 
@@ -64,6 +70,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       {
         name: "list_properties",
         description: "List all configured Google Analytics properties",
+        inputSchema: {
+          type: "object",
+          properties: {},
+        },
+      },
+      {
+        name: "discover_all_properties",
+        description: "Discover all GA4 properties in the Google Analytics account (including ones not yet configured here)",
         inputSchema: {
           type: "object",
           properties: {},
@@ -241,6 +255,63 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           },
         },
       },
+      {
+        name: "get_data_streams",
+        description: "List all data streams for a GA4 property (shows measurement IDs like G-XXXXXXX)",
+        inputSchema: {
+          type: "object",
+          properties: {
+            property: {
+              type: "string",
+              description: `Property name or ID. Available: ${propertyList}`,
+            },
+          },
+        },
+      },
+      {
+        name: "get_measurement_protocol_secrets",
+        description: "List measurement protocol secrets for a data stream",
+        inputSchema: {
+          type: "object",
+          properties: {
+            property: {
+              type: "string",
+              description: `Property name or ID. Available: ${propertyList}`,
+            },
+            streamId: {
+              type: "string",
+              description: "Data stream ID (get from get_data_streams)",
+            },
+          },
+          required: ["streamId"],
+        },
+      },
+      {
+        name: "get_google_ads_links",
+        description: "List Google Ads links for a GA4 property",
+        inputSchema: {
+          type: "object",
+          properties: {
+            property: {
+              type: "string",
+              description: `Property name or ID. Available: ${propertyList}`,
+            },
+          },
+        },
+      },
+      {
+        name: "get_property_details",
+        description: "Get detailed information about a GA4 property including creation time and settings",
+        inputSchema: {
+          type: "object",
+          properties: {
+            property: {
+              type: "string",
+              description: `Property name or ID. Available: ${propertyList}`,
+            },
+          },
+        },
+      },
     ],
   };
 });
@@ -256,6 +327,25 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           .map(([name, id]) => `${name}: ${id}${name === defaultProperty ? " (default)" : ""}`)
           .join("\n");
         return { content: [{ type: "text", text: `Available properties:\n${propList}` }] };
+      }
+
+      case "discover_all_properties": {
+        const [accountSummaries] = await analyticsAdminClient.listAccountSummaries();
+        if (!accountSummaries || accountSummaries.length === 0) {
+          return { content: [{ type: "text", text: "No accounts found." }] };
+        }
+        let output = "All GA4 Properties:\n" + "=".repeat(60) + "\n";
+        for (const account of accountSummaries) {
+          output += `\nAccount: ${account.displayName} (${account.account})\n`;
+          output += "-".repeat(40) + "\n";
+          for (const prop of (account.propertySummaries || [])) {
+            const propId = prop.property.replace("properties/", "");
+            const isConfigured = Object.values(properties).includes(propId);
+            output += `  ${prop.displayName}\n`;
+            output += `    ID: ${propId}${isConfigured ? " (already configured)" : " ← NOT YET CONFIGURED"}\n`;
+          }
+        }
+        return { content: [{ type: "text", text: output }] };
       }
 
       case "run_report": {
@@ -348,6 +438,99 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         return {
           content: [{ type: "text", text: `Currently active users: ${activeUsers}` }],
         };
+      }
+
+      case "get_data_streams": {
+        const propertyId = resolvePropertyId(args.property);
+        const [streams] = await analyticsAdminClient.listDataStreams({
+          parent: `properties/${propertyId}`,
+        });
+
+        if (!streams || streams.length === 0) {
+          return { content: [{ type: "text", text: "No data streams found for this property." }] };
+        }
+
+        let output = "Data Streams:\n" + "-".repeat(60) + "\n";
+        for (const stream of streams) {
+          const streamId = stream.name.split("/").pop();
+          output += `Stream ID: ${streamId}\n`;
+          output += `  Display Name: ${stream.displayName || "(none)"}\n`;
+          output += `  Type: ${stream.type}\n`;
+          if (stream.webStreamData) {
+            output += `  Measurement ID: ${stream.webStreamData.measurementId}\n`;
+            output += `  Default URI: ${stream.webStreamData.defaultUri || "(none)"}\n`;
+          }
+          if (stream.androidAppStreamData) {
+            output += `  Package Name: ${stream.androidAppStreamData.packageName}\n`;
+          }
+          if (stream.iosAppStreamData) {
+            output += `  Bundle ID: ${stream.iosAppStreamData.bundleId}\n`;
+          }
+          output += `  Create Time: ${stream.createTime || "unknown"}\n`;
+          output += `  Update Time: ${stream.updateTime || "unknown"}\n`;
+          output += "\n";
+        }
+        return { content: [{ type: "text", text: output }] };
+      }
+
+      case "get_measurement_protocol_secrets": {
+        const propertyId = resolvePropertyId(args.property);
+        const streamId = args.streamId;
+        const [secrets] = await analyticsAdminClient.listMeasurementProtocolSecrets({
+          parent: `properties/${propertyId}/dataStreams/${streamId}`,
+        });
+
+        if (!secrets || secrets.length === 0) {
+          return { content: [{ type: "text", text: "No measurement protocol secrets found." }] };
+        }
+
+        let output = "Measurement Protocol Secrets:\n" + "-".repeat(60) + "\n";
+        for (const secret of secrets) {
+          output += `Name: ${secret.displayName || "(unnamed)"}\n`;
+          output += `  Secret Value: ${secret.secretValue}\n\n`;
+        }
+        return { content: [{ type: "text", text: output }] };
+      }
+
+      case "get_google_ads_links": {
+        const propertyId = resolvePropertyId(args.property);
+        const [links] = await analyticsAdminClient.listGoogleAdsLinks({
+          parent: `properties/${propertyId}`,
+        });
+
+        if (!links || links.length === 0) {
+          return { content: [{ type: "text", text: "No Google Ads links found for this property." }] };
+        }
+
+        let output = "Google Ads Links:\n" + "-".repeat(60) + "\n";
+        for (const link of links) {
+          output += `Customer ID: ${link.customerId}\n`;
+          output += `  Can Manage Clients: ${link.canManageClients}\n`;
+          output += `  Ads Personalization Enabled: ${link.adsPersonalizationEnabled}\n`;
+          output += `  Create Time: ${link.createTime || "unknown"}\n`;
+          output += `  Update Time: ${link.updateTime || "unknown"}\n\n`;
+        }
+        return { content: [{ type: "text", text: output }] };
+      }
+
+      case "get_property_details": {
+        const propertyId = resolvePropertyId(args.property);
+        const [property] = await analyticsAdminClient.getProperty({
+          name: `properties/${propertyId}`,
+        });
+
+        let output = "Property Details:\n" + "-".repeat(60) + "\n";
+        output += `Property ID: ${propertyId}\n`;
+        output += `Display Name: ${property.displayName}\n`;
+        output += `Industry Category: ${property.industryCategory || "(not set)"}\n`;
+        output += `Time Zone: ${property.timeZone}\n`;
+        output += `Currency: ${property.currencyCode}\n`;
+        output += `Service Level: ${property.serviceLevel}\n`;
+        output += `Create Time: ${property.createTime}\n`;
+        output += `Update Time: ${property.updateTime}\n`;
+        output += `Parent: ${property.parent || "(none)"}\n`;
+
+        return { content: [{ type: "text", text: output }] };
       }
 
       default:

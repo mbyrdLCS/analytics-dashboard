@@ -44,6 +44,7 @@ const properties = {
       "freeshow-app": { name: "FreeShow App", id: "416366588" },
       "b1-mobile": { name: "B1 Mobile", id: "347220825" },
       "b1-checkin": { name: "B1 Checkin", id: "508251303" },
+      "freeplay": { name: "Freeplay", id: "522089504" },
     }
   }
 };
@@ -433,6 +434,18 @@ app.get("/api/stats", async (req, res) => {
 
     res.setHeader('Cache-Control', 'public, s-maxage=21600, stale-while-revalidate=3600');
     res.json(results);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Podcast download stats from Cloudflare Worker
+app.get("/api/podcast", async (req, res) => {
+  try {
+    const response = await fetch("https://churchapps-podcast-rss.micheal-ab4.workers.dev/stats");
+    const data = await response.json();
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=300');
+    res.json(data);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

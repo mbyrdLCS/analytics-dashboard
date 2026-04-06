@@ -690,6 +690,7 @@
         'b1-web': '/logos/B1Admin.webp',
         'freeshow': '/logos/FreeShow.png',
         'freeshow-app': '/logos/FreeShow.png',
+        'freeplay': '/logos/Freeplay.png',
         'lessons-church': '/logos/Lessons-church.png',
         'churchapps': '/logos/Churchapps.png',
       };
@@ -817,10 +818,14 @@
       btn.textContent = 'Loading...';
 
       try {
-        const response = await fetch('/api/stats');
-        const data = await response.json();
-        dashboardData = data;  // Store for modal access
-        renderDashboard(data);
+        const [statsRes, podcastRes] = await Promise.all([
+          fetch('/api/stats'),
+          fetch('/api/podcast'),
+        ]);
+        const data = await statsRes.json();
+        const podcastData = await podcastRes.json();
+        dashboardData = data;
+        renderDashboard(data, podcastData);
         document.getElementById('lastUpdated').textContent =
           'Last updated: ' + new Date().toLocaleTimeString();
       } catch (error) {
@@ -901,9 +906,57 @@
       `;
     }
 
-    function renderDashboard(data) {
+    function renderPodcastSection(podcastData) {
+      const episodes = podcastData.episodes || podcastData;
+      if (!episodes || episodes.length === 0) return '';
+      const totalDownloads = episodes.reduce((sum, ep) => sum + (ep.downloads || 0), 0);
+      const subscribers = podcastData.subscribers ?? null;
+      const rows = episodes.map(ep => `
+        <div class="traffic-item">
+          <div class="traffic-bar-container">
+            <div class="traffic-bar" style="width: ${totalDownloads > 0 ? (ep.downloads / Math.max(...episodes.map(e => e.downloads || 0)) * 100) : 0}%"></div>
+            <span class="traffic-label ${ep.downloads === 0 ? 'outside' : ''}" style="${ep.downloads === 0 ? 'left: 2%; right: auto; color: #e6f1ff;' : ''}">Ep ${ep.episode_num}: ${ep.title}</span>
+          </div>
+          <div class="traffic-count">${formatNumber(ep.downloads || 0)}</div>
+        </div>
+      `).join('');
+
+      return `
+        <div class="section">
+          <div class="section-title">Podcast</div>
+          <div class="section-grid" style="grid-template-columns: 1fr;">
+            <div class="property-card">
+              <div class="property-header">
+                <div class="property-name-row">
+                  <div class="property-name">The ChurchApps Podcast</div>
+                </div>
+                <div class="header-badges">
+                  <div class="realtime">
+                    🎙 ${formatNumber(totalDownloads)} total downloads
+                  </div>
+                </div>
+              </div>
+              <div class="traffic-sources" style="margin-top: 0; padding-top: 0; border-top: none;">
+                <div class="traffic-title">Downloads by Episode</div>
+                <div class="traffic-list">${rows}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderDashboard(data, podcastData) {
       const content = document.getElementById('content');
       content.innerHTML = '';
+
+      // Render Podcast section
+      const podcastEpisodes = podcastData?.episodes || podcastData;
+      if (podcastEpisodes && podcastEpisodes.length > 0) {
+        const podcastSection = document.createElement('div');
+        podcastSection.innerHTML = renderPodcastSection(podcastData);
+        content.appendChild(podcastSection.firstElementChild);
+      }
 
       // Render Apps section
       const appsSection = document.createElement('div');
