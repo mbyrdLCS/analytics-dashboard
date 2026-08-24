@@ -6,7 +6,7 @@ import { execSync } from "child_process";
 const credentialsPath = "/Users/MJB/GoogleAnylitcsMCP/credentials.json";
 const properties = {
   "B1 Admin": "516573834",
-  "B1 Mobile": "347220825",
+  "B1 App": "363280261",
   "FreeShow": "408962359",
   "Lessons.church": "363411724",
 };

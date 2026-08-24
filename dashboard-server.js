@@ -42,7 +42,7 @@ const properties = {
     items: {
       "b1-admin": { name: "B1 Admin", id: "516573834" },
       "freeshow-app": { name: "FreeShow App", id: "416366588" },
-      "b1-mobile": { name: "B1 Mobile", id: "347220825" },
+      "b1-app": { name: "B1 App", id: "363280261" },
       "b1-checkin": { name: "B1 Checkin", id: "508251303" },
       "freeplay": { name: "Freeplay", id: "522089504" },
     }

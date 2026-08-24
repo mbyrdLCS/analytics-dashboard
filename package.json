@@ -8,6 +8,7 @@
     "start": "node index.js"
   },
   "dependencies": {
+    "@google-analytics/admin": "^5.0.0",
     "@google-analytics/data": "^4.8.0",
     "@modelcontextprotocol/sdk": "^1.0.0",
     "express": "^5.2.1"

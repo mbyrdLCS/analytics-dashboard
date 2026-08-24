@@ -855,6 +855,11 @@
                   ⛪ ${formatNumber(property.sundayUsers)} Sunday
                 </div>
               ` : ''}
+              ${property.propertyKey === 'freeplay' ? `
+                <div class="sunday-badge">
+                  👤 ${formatNumber(ranges['7 Days']?.users || 0)} this week
+                </div>
+              ` : ''}
               <div class="realtime">
                 <div class="realtime-dot"></div>
                 ${property.realtime || 0} online
