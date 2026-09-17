@@ -341,7 +341,8 @@
 
     .top-countries {
       display: flex;
-      gap: 15px;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .country-chip {
@@ -578,7 +579,6 @@
       }
 
       .top-countries {
-        flex-wrap: wrap;
         gap: 8px;
       }
 
@@ -714,6 +714,22 @@
         'Hungary': '🇭🇺', 'Greece': '🇬🇷', 'Turkey': '🇹🇷', 'Israel': '🇮🇱',
         'Egypt': '🇪🇬', 'Pakistan': '🇵🇰', 'Bangladesh': '🇧🇩', 'Taiwan': '🇹🇼',
         'Hong Kong': '🇭🇰', 'United Arab Emirates': '🇦🇪', 'Saudi Arabia': '🇸🇦',
+        'Ghana': '🇬🇭', 'Ethiopia': '🇪🇹', 'Uganda': '🇺🇬', 'Tanzania': '🇹🇿',
+        'Zimbabwe': '🇿🇼', 'Zambia': '🇿🇲', 'Cameroon': '🇨🇲', 'Democratic Republic of the Congo': '🇨🇩',
+        'Eswatini': '🇸🇿', 'Malawi': '🇲🇼', 'Mozambique': '🇲🇿', 'Rwanda': '🇷🇼',
+        'Senegal': '🇸🇳', 'Ivory Coast': '🇨🇮', 'Ecuador': '🇪🇨', 'Venezuela': '🇻🇪',
+        'Bolivia': '🇧🇴', 'Paraguay': '🇵🇾', 'Uruguay': '🇺🇾', 'Guatemala': '🇬🇹',
+        'Honduras': '🇭🇳', 'El Salvador': '🇸🇻', 'Costa Rica': '🇨🇷', 'Panama': '🇵🇦',
+        'Dominican Republic': '🇩🇴', 'Cuba': '🇨🇺', 'Haiti': '🇭🇹', 'Jamaica': '🇯🇲',
+        'Myanmar': '🇲🇲', 'Nepal': '🇳🇵', 'Sri Lanka': '🇱🇰', 'Cambodia': '🇰🇭',
+        'Laos': '🇱🇦', 'Mongolia': '🇲🇳', 'Kazakhstan': '🇰🇿', 'Uzbekistan': '🇺🇿',
+        'Slovakia': '🇸🇰', 'Bulgaria': '🇧🇬', 'Croatia': '🇭🇷', 'Serbia': '🇷🇸',
+        'Lithuania': '🇱🇹', 'Latvia': '🇱🇻', 'Estonia': '🇪🇪', 'Slovenia': '🇸🇮',
+        'Bosnia and Herzegovina': '🇧🇦', 'North Macedonia': '🇲🇰', 'Albania': '🇦🇱',
+        'Morocco': '🇲🇦', 'Algeria': '🇩🇿', 'Tunisia': '🇹🇳', 'Libya': '🇱🇾',
+        'Jordan': '🇯🇴', 'Lebanon': '🇱🇧', 'Kuwait': '🇰🇼', 'Qatar': '🇶🇦',
+        'Bahrain': '🇧🇭', 'Oman': '🇴🇲', 'Iraq': '🇮🇶', 'Iran': '🇮🇷',
+        'Afghanistan': '🇦🇫', 'Myanmar': '🇲🇲',
       };
       return flags[country] || '🌍';
     }
@@ -724,12 +740,9 @@
       const list = document.getElementById('countryList');
 
       // Find the property data
-      let countries = [];
-      if (dashboardData.apps.items[propertyKey]) {
-        countries = dashboardData.apps.items[propertyKey].countries || [];
-      } else if (dashboardData.websites.items[propertyKey]) {
-        countries = dashboardData.websites.items[propertyKey].countries || [];
-      }
+      let prop = dashboardData.apps.items[propertyKey] || dashboardData.websites.items[propertyKey];
+      let countries = prop?.countries || [];
+      const countryLabel = prop?.countryLabel || 'users';
 
       title.textContent = `${propertyName} - Countries (7d)`;
 
@@ -740,7 +753,7 @@
           <div class="country-list-item">
             <span class="country-list-flag">${getCountryFlag(c.name)}</span>
             <span class="country-list-name">${c.name}</span>
-            <span class="country-list-users">${formatNumber(c.users)} users</span>
+            <span class="country-list-users">${formatNumber(c.users)} ${countryLabel}</span>
           </div>
         `).join('');
       }
@@ -790,17 +803,18 @@
       `;
     }
 
-    function renderCountries(countries, propertyKey, propertyName) {
+    function renderCountries(countries, propertyKey, propertyName, countryLabel) {
       if (!countries || countries.length === 0) {
         return '';
       }
 
-      const top2 = countries.slice(0, 2);
-      const chips = top2.map(c => `
+      const label = countryLabel || 'users';
+      const top5 = countries.slice(0, 5);
+      const chips = top5.map(c => `
         <div class="country-chip">
           <span class="country-flag">${getCountryFlag(c.name)}</span>
           <span>${c.name}</span>
-          <span class="country-users">${formatNumber(c.users)}</span>
+          <span class="country-users">${formatNumber(c.users)} ${label}</span>
         </div>
       `).join('');
 
@@ -906,7 +920,7 @@
           </div>
 
           ${renderTrafficSources(property.trafficSources)}
-          ${renderCountries(property.countries, property.propertyKey, property.name)}
+          ${renderCountries(property.countries, property.propertyKey, property.name, property.countryLabel)}
         </div>
       `;
     }

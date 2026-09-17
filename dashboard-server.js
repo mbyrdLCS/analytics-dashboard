@@ -31,7 +31,7 @@ const properties = {
   websites: {
     label: "Websites",
     items: {
-      "freeshow": { name: "FreeShow.app", id: "408962359" },
+      "freeshow": { name: "FreeShow.app", id: "408962359", countryPageFilter: "/downloading", countryLabel: "downloads" },
       "b1-web": { name: "B1.church", id: "363397146" },
       "lessons-church": { name: "Lessons.church", id: "363411724" },
       "churchapps": { name: "ChurchApps.org", id: "363427908" },
@@ -41,7 +41,7 @@ const properties = {
     label: "Apps",
     items: {
       "b1-admin": { name: "B1 Admin", id: "516573834" },
-      "freeshow-app": { name: "FreeShow App", id: "416366588" },
+      "freeshow-app": { name: "FreeShow App", id: "416366588", countryFallbackId: "408962359" },
       "b1-app": { name: "B1 App", id: "363280261" },
       "b1-checkin": { name: "B1 Checkin", id: "508251303" },
       "freeplay": { name: "Freeplay", id: "522089504" },
@@ -179,16 +179,24 @@ async function fetchPropertyStats(key, prop, timeRanges) {
     result.trafficSources = [];
   }
 
-  // Get top countries
+  // Get top countries (use fallback property if configured, e.g. desktop apps that don't send geolocation)
+  const countryPropertyId = prop.countryFallbackId || prop.id;
+  const countryQuery = {
+    property: `properties/${countryPropertyId}`,
+    dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
+    metrics: [{ name: "totalUsers" }],
+    dimensions: [{ name: "country" }],
+    orderBys: [{ metric: { metricName: "totalUsers" }, desc: true }],
+    limit: 20,
+  };
+  if (prop.countryPageFilter) {
+    countryQuery.dimensionFilter = {
+      filter: { fieldName: "pagePath", stringFilter: { value: prop.countryPageFilter } }
+    };
+  }
+  result.countryLabel = prop.countryLabel || "users";
   try {
-    const [response] = await analyticsDataClient.runReport({
-      property: `properties/${prop.id}`,
-      dateRanges: [{ startDate: "7daysAgo", endDate: "today" }],
-      metrics: [{ name: "totalUsers" }],
-      dimensions: [{ name: "country" }],
-      orderBys: [{ metric: { metricName: "totalUsers" }, desc: true }],
-      limit: 20,
-    });
+    const [response] = await analyticsDataClient.runReport(countryQuery);
 
     result.countries = [];
     if (response.rows) {
